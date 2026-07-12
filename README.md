@@ -74,6 +74,13 @@ It reported **96–100%** the entire run. Real **Model FLOP Utilization: 9–19%
 
 Net **+70%** throughput, entirely from moving fewer bytes.
 
+**Corollary: CPU work is not free either.** Running a CPU-only benchmark alongside training slowed it
+from **9.17 → 9.35 s/it (2%)** — ~14 hours over a 30-day run — and it snapped back the instant the CPU
+job was killed. Unified memory means the CPU competes with the GPU for the *same* 273 GB/s. On a
+discrete-GPU box you could treat CPU as free; here you cannot. Heavy CPU jobs (benchmarks, dedup,
+packing) get scheduled around training, not alongside it.
+
+
 ### 2. FP8 works on this chip — and is still slower than bf16
 
 We concluded twice that FP8 was impossible (*"no aarch64 wheels; `transformer_engine` dies with

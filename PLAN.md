@@ -50,6 +50,12 @@ confirms this, in both directions:
 | Micro-batch 32 → 64 | **−0.3%**, 2× memory | Adds bytes, buys nothing. |
 | Micro-batch 128 | **OOM** (~109 GB) | Killed the machine. |
 
+**Corollary: CPU work is not free either.** Running a CPU-only benchmark alongside training slowed it
+from **9.17 → 9.35 s/it (2%)** — ~14 hours over a 30-day run — and it snapped back the instant the CPU
+job was killed. Unified memory means the CPU competes with the GPU for the *same* 273 GB/s. On a
+discrete-GPU box you could treat CPU as free; here you cannot. Heavy CPU jobs (benchmarks, dedup,
+packing) get scheduled around training, not alongside it.
+
 Micro-batch is therefore a pure memory knob — with effective batch held fixed by gradient accumulation
 it is *mathematically identical* (same gradients, no BatchNorm), so it affects neither speed nor
 quality. We keep it at 32 for OOM headroom.
