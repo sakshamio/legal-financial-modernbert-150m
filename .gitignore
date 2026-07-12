@@ -1,0 +1,40 @@
+# ---------------------------------------------------------------------------
+# DATA. There is ~296GB of corpus/packed tokens in this tree. None of it belongs
+# in git -- it is all reproducible from scripts/prepare_corpus.py.
+# ---------------------------------------------------------------------------
+data/
+*.bin
+*.jsonl
+*.jsonl.gz
+*.jsonl.xz
+*.parquet
+*.arrow
+
+# Model weights & training state (live on the HF Hub, incl. step-N branches)
+checkpoints/
+archive/
+tokenizer/
+*.safetensors
+*.pt
+*.pth
+
+# Logs & run artifacts
+*.log
+stats/
+nohup.out
+
+# Compiled Go binary (rebuild with: cd godedup && go build -o godedup .)
+godedup/godedup
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.ipynb_checkpoints/
+
+# Secrets -- nothing here should ever be committed
+.env
+*.token
+.huggingface/
