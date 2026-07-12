@@ -28,10 +28,21 @@ def main():
     args = ap.parse_args()
 
     val_ds = load_from_disk(str(PAIRS_DIR / "val"))
+
+    # Anchors/positives already carry the [QUERY]/[PASSAGE] prefixes they were TRAINED with -- feeding
+    # them un-prefixed at eval would measure a different model than the one we trained.
     queries = {f"q{i}": r["anchor"] for i, r in enumerate(val_ds)}
     corpus = {f"c{i}": r["positive"] for i, r in enumerate(val_ds)}
     relevant_docs = {f"q{i}": {f"c{i}"} for i in range(len(val_ds))}
-    print(f"eval set: {len(queries)} queries over a {len(corpus)}-doc corpus")
+
+    # Hard negatives make the corpus adversarial: without them the "distractors" are random passages
+    # and any model scores well. With them, retrieval must actually discriminate.
+    n = len(val_ds)
+    for k in [c for c in val_ds.column_names if c.startswith("negative_")]:
+        for i, r in enumerate(val_ds):
+            corpus[f"n{k}{i}"] = r[k]
+    print(f"eval set: {len(queries)} queries over a {len(corpus)}-doc corpus "
+          f"({len(corpus) - n} hard-negative distractors included)")
 
     model = SentenceTransformer(args.model_dir)
     dims = matryoshka_dims(model.get_sentence_embedding_dimension())
