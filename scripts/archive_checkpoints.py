@@ -39,16 +39,30 @@ ARTIFACT_FILES = [
 ]
 
 
-def target_steps(max_steps, save_steps, n_tail=20):
-    """Log-spaced early (where learning dynamics move fastest), then a regular tail.
+def target_steps(max_steps, save_steps, n_tail=20, dense_until=30000):
+    """DENSE early, log-spaced, then a regular tail.
 
-    The tail cadence SCALES with run length: a fixed cadence that gave 24 snapshots on an 88k-step run
-    would give ~250 on a 251k-step run (~150GB of pushes). This keeps it at roughly n_tail + a handful.
+    Three regimes, because they answer different questions:
+
+    - DENSE (every save_steps up to `dense_until`): the representation changes fastest here, and the
+      research probes measure exactly that -- when nesting starts, when finance leaves the legal cone,
+      when the concept-before-token lead peaks. A 14k-step gap could hide a phase transition outright.
+      Anything NOT archived is gone for good: save_total_limit=3 prunes it locally after ~15h, so this
+      is the only lever that decides what stays reproducible.
+    - DOUBLING: cheap coverage across the middle of the run.
+    - TAIL: cadence SCALES with run length. A fixed cadence that gave 24 snapshots on an 88k-step run
+      would give ~250 on a 271k-step run (~150GB of pushes).
+
     Only multiples of save_steps are reachable -- those are the steps training actually checkpoints at.
     """
     targets = set()
+
+    # dense early phase -- ~15 extra branches (~9GB), where the publishable dynamics live
+    for step in range(save_steps, min(dense_until, max_steps) + 1, save_steps):
+        targets.add(step)
+
     step = save_steps
-    while step <= max_steps:  # doubling: 2.5k, 5k, 10k, 20k, ...
+    while step <= max_steps:  # doubling: 2k, 4k, 8k, 16k, ...
         targets.add(step)
         step *= 2
 
