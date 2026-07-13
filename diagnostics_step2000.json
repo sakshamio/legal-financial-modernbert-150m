@@ -1,0 +1,165 @@
+{
+  "step": 2000,
+  "geometry": {
+    "mean_pairwise_cosine": 0.6535282135009766,
+    "dims_for_90pct_var": 46,
+    "dims_for_95pct_var": 84,
+    "dims_for_99pct_var": 151,
+    "effective_rank": 20.183263778686523,
+    "total_dims": 768,
+    "variance_in_first_k_coords": {
+      "64": 0.07850031554698944,
+      "128": 0.16069276630878448,
+      "256": 0.3297628164291382,
+      "512": 0.6530276536941528,
+      "768": 1.0
+    }
+  },
+  "extrapolation": {
+    "fit": {
+      "a": 77.21170690984442,
+      "b": 0.36265948906298673,
+      "c": 8.641383909171646e-18
+    },
+    "irreducible_loss_c": 8.641383909171646e-18,
+    "predicted_at_max_steps": 0.8267330247363631,
+    "fitted_on_steps": [
+      550,
+      3650
+    ]
+  },
+  "freq_buckets": {
+    "top 100": {
+      "loss": 2.048294992051798,
+      "acc": 0.5959421541118066,
+      "n": 4633
+    },
+    "100-1k": {
+      "loss": 5.1598357735692355,
+      "acc": 0.2007593735168486,
+      "n": 2107
+    },
+    "1k-10k": {
+      "loss": 7.7549034646124,
+      "acc": 0.09838274932614555,
+      "n": 2226
+    },
+    "10k+": {
+      "loss": 10.593409618130522,
+      "acc": 0.042787286063569685,
+      "n": 818
+    }
+  },
+  "domain_tokens": {
+    "top1_accuracy": 0.0,
+    "n": 10,
+    "rows": [
+      {
+        "term": "U.S.C.",
+        "rank_of_correct": 40444,
+        "top1_correct": false,
+        "top3": [
+          ".",
+          "\u00a7",
+          ""
+        ]
+      },
+      {
+        "term": "C.F.R.",
+        "rank_of_correct": 40452,
+        "top1_correct": false,
+        "top3": [
+          ".",
+          "1",
+          ","
+        ]
+      },
+      {
+        "term": "10-K",
+        "rank_of_correct": 42042,
+        "top1_correct": false,
+        "top3": [
+          "filed",
+          "connection",
+          "accordance"
+        ]
+      },
+      {
+        "term": "10-Q",
+        "rank_of_correct": 18026,
+        "top1_correct": false,
+        "top3": [
+          "filed",
+          "10-K",
+          "basis"
+        ]
+      },
+      {
+        "term": "8-K",
+        "rank_of_correct": 29625,
+        "top1_correct": false,
+        "top3": [
+          "which",
+          "and",
+          "the"
+        ]
+      },
+      {
+        "term": "P.A.",
+        "rank_of_correct": 16805,
+        "top1_correct": false,
+        "top3": [
+          "the",
+          "-",
+          "a"
+        ]
+      },
+      {
+        "term": "e.g.",
+        "rank_of_correct": 4338,
+        "top1_correct": false,
+        "top3": [
+          "Inc.",
+          "assets",
+          "notes"
+        ]
+      },
+      {
+        "term": "\u00a7\u00a7",
+        "rank_of_correct": 35122,
+        "top1_correct": false,
+        "top3": [
+          "-",
+          "\u00a7",
+          "."
+        ]
+      },
+      {
+        "term": "Inc.",
+        "rank_of_correct": 3883,
+        "top1_correct": false,
+        "top3": [
+          "and",
+          "",
+          "by"
+        ]
+      },
+      {
+        "term": "Q3",
+        "rank_of_correct": 48640,
+        "top1_correct": false,
+        "top3": [
+          "period",
+          "purposes",
+          "part"
+        ]
+      }
+    ]
+  },
+  "loss_by_position": [
+    4.717338417647229,
+    4.708637306705567,
+    4.816489561509841,
+    4.679234973645462
+  ]
+}
