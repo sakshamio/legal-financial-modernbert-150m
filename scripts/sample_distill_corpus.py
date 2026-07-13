@@ -86,17 +86,26 @@ def unescape(frag):
 
 
 def sample_file(job):
-    domain, n_want, min_chars, max_chars, seed = job
+    """Stream one domain's chunks straight to a shard file.
+
+    Chunks are NEVER accumulated in memory. At the 40M-chunk rung the full set is ~72GB of text,
+    which would not fit alongside a running training job (and an OOM already killed corpus prep once
+    on this box). Workers stream to shards; the merge pass below interleaves them with 6 open file
+    handles and one line resident.
+    """
+    domain, n_want, min_chars, max_chars, seed, out_dir = job
     path = DEDUP_DIR / f"{domain}.jsonl"
+    shard = Path(out_dir) / f"_shard_{domain}.jsonl"
     if not path.exists():
-        return domain, [], 0
+        return domain, 0, 0
     size = path.stat().st_size
     win = max_chars * 3  # escapes expand; 3x gives ample slack to land max_chars of real text
     rng = np.random.default_rng(seed)
 
-    out, misses, seen = [], 0, set()
+    n_out, misses, seen = 0, 0, set()
+    fout = open(shard, "w")
     with open(path, "rb") as f:
-        while len(out) < n_want and misses < n_want * 10 + 500:
+        while n_out < n_want and misses < n_want * 10 + 500:
             f.seek(int(rng.integers(0, max(1, size - win))))
             raw = f.read(win)
             if not raw:
@@ -142,8 +151,10 @@ def sample_file(job):
                 misses += 1
                 continue
             seen.add(h)
-            out.append(text)
-    return domain, out, misses
+            fout.write(json.dumps({"text": text, "domain": domain}) + "\n")
+            n_out += 1
+    fout.close()
+    return domain, n_out, misses
 
 
 def main():

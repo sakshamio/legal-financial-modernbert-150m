@@ -44,3 +44,6 @@ benchmarks/
 loss_analysis.json
 STATUS.md
 .ntfy_topic
+
+# Compiled Go binary (rebuild with: cd gosample && go build -o gosample .)
+gosample/gosample
