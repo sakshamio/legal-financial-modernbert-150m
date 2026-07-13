@@ -236,9 +236,15 @@ def domain_token_probe(model, tok, device="cpu"):
     hits = 0
     rows = []
     for term, text in cases:
-        tid = tok.convert_tokens_to_ids(term)
-        if tid is None or tid == tok.unk_token_id:
+        # Each domain term exists as TWO ids: bare ("10-K") and space-prefixed (" 10-K"). Running
+        # text almost always contains the space-prefixed one, so checking only the bare id meant this
+        # probe could essentially never fire -- it reported 0% at step 6,000 while the mined-context
+        # probe in research_probes.py, which accepts either, reported 31.1% on the same checkpoint.
+        tids = [i for i in (tok.convert_tokens_to_ids(term), tok.convert_tokens_to_ids(" " + term))
+                if i is not None and i != tok.unk_token_id]
+        if not tids:
             continue
+        # (both variants scored below)
         enc_in = tok(text, return_tensors="pt")
         enc_in = {k: v.to(device) for k, v in enc_in.items() if k in ("input_ids", "attention_mask")}
         pos = (enc_in["input_ids"][0] == tok.mask_token_id).nonzero()
@@ -247,8 +253,9 @@ def domain_token_probe(model, tok, device="cpu"):
         logits = model(**enc_in).logits
         lg = logits[0][pos[0, 0]] if logits.dim() == 3 else logits[pos[0, 0]]
         top5 = lg.topk(5).indices.tolist()
-        rank = (lg > lg[tid]).sum().item() + 1   # rank of the CORRECT token out of 50,368
-        ok = top5[0] == tid
+        best = max(float(lg[i]) for i in tids)       # score the better of the two variants
+        rank = int((lg > best).sum()) + 1            # rank of the CORRECT token out of 50,368
+        ok = top5[0] in tids
         hits += ok
         rows.append({
             "term": term, "rank_of_correct": rank, "top1_correct": bool(ok),
