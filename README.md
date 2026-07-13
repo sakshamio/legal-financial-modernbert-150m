@@ -8,6 +8,7 @@ All on **one NVIDIA DGX Spark (GB10)**.
 
 - 🤗 **Model + checkpoint series:** [sakshamio/legal-financial-modernbert-150m](https://huggingface.co/sakshamio/legal-financial-modernbert-150m)
 - 📋 **Full technical plan & design decisions:** [`PLAN.md`](PLAN.md)
+- 🔬 **Diagnostics & interpretability:** [`DIAGNOSTICS.md`](DIAGNOSTICS.md) — what the loss actually means, and the metric that decides whether Matryoshka can work at all
 
 > **Status:** stage-1 pretraining is running (271,000 steps, ~30 days). The weights on the Hub are early
 > checkpoints and are **not usable yet**. No quality claims are made.
@@ -122,6 +123,40 @@ fit in **uint16**, so the corpus is a flat 51.5 GB array and "packing into block
 
 ---
 
+## Making the run legible
+
+A loss of `4.70` is not information. See [`DIAGNOSTICS.md`](DIAGNOSTICS.md) for the full write-up.
+
+**The number that gives it meaning is the unigram entropy: 7.42** — the loss you get by predicting token
+*frequencies* alone, computed from the corpus itself. A model sitting there has learned statistics. A
+model below it is **using context**. At 4.70 we are decisively below.
+
+| | loss | perplexity |
+| --- | --- | --- |
+| Random init — ln(50,368) | 10.83 | 50,368 |
+| **Unigram baseline** | **7.42** | 1,674 |
+| **Us @ step 2,000 (0.7%)** | **4.70** | **110** |
+| Well-trained encoder | ~1.5–2.0 | ~5–7 |
+
+**The metric that decides whether this project works** is not the loss at all — it is **effective rank**
+(currently **17.2 / 768**, mean pairwise cosine +0.657). Transformer representations collapse into a
+narrow cone; a model can have an excellent MLM loss and a *useless* embedding space. And if the
+representation only uses ~17 of its 768 dimensions, **Matryoshka truncation is meaningless — there is
+nothing to nest.** Low rank is normal at 0.7% trained, but a *flat* effective rank by ~step 50k would be
+the earliest actionable warning we could get, weeks before any retrieval eval.
+
+Also worth knowing: **rare tokens are still being guessed** (loss 10.61 ≈ ln(vocab) = 10.83). Aggregate
+loss is flattered by frequent tokens; that bucket is not. Meanwhile a **litigation cluster has already
+formed** — `plaintiff` and `defendant` are each other's nearest neighbour — and the `10-Q` probe already
+puts `10-K` in its top-3: **the concept forms before the token.**
+
+Two of these diagnostics were **wrong**, and the data exposed them — a "loss by position" probe built on
+causal-LM assumptions (MLM is bidirectional, so *flat is correct*), and a neighbour probe that read the
+static embedding table instead of contextual representations (meaning does not live in the lookup
+table). Both are documented, because a diagnostic you cannot falsify is worse than none.
+
+---
+
 ## Three bugs that would have shipped silently
 
 Each was caught by **asserting**, not eyeballing.
@@ -180,6 +215,10 @@ scripts/
   build_pairs.py          stage 2: contrastive pairs mined from labels (LEDGAR/CUAD/FinQA/EDGAR)
   train_matryoshka.py     stage 2: MNRL inside MatryoshkaLoss
   eval_retrieval.py       nDCG@10 + Recall@100 at every truncation dim
+  analyze_loss.py         reference points (unigram entropy), per-domain loss, mask-fill probes
+  diagnostics.py          embedding geometry, freq buckets, domain-token probe, neighbours, --trend
+  eval_benchmarks.py      MTEB legal/financial retrieval per Matryoshka dim (+ contamination guard)
+  publish_final.py        push the FINAL model to main (main is not touched during training)
   training_stats.py       6h health snapshots (plateau/divergence detection)
   archive_checkpoints.py  preserve 28 checkpoints as HF step-N branches
   dedup_corpus.py         Python dedup -- the reference the Go version was verified against
