@@ -42,3 +42,5 @@ venv/
 # Run artifacts (regenerate with the scripts; raw MTEB dumps are noisy)
 benchmarks/
 loss_analysis.json
+STATUS.md
+.ntfy_topic
