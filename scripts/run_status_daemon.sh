@@ -45,7 +45,10 @@ while true; do
   fi
 
   # --- alerts worth waking up for
-  alive=$(pgrep -f "[p]retrain_mlm.py" > /dev/null && echo 1 || echo 0)
+  # NOT `pgrep -f pretrain_mlm.py`: that also matches the tmux SERVER (its cmdline contains the
+  # training command), so it reported "alive" for 26 min after an OOM killed the trainer and the
+  # DIED alert never fired. is_training_alive.sh requires comm == python.
+  alive=$(./scripts/is_training_alive.sh && echo 1 || echo 0)
   step=$(grep -oE "[0-9]+/${MAX_STEPS}" train_stage1.log 2>/dev/null | tail -1 | cut -d/ -f1)
   step=${step:-0}
   loss=$(grep -oE "'loss': [0-9.]+" train_stage1.log 2>/dev/null | tail -1 | grep -oE "[0-9.]+$")

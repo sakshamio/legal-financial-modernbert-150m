@@ -50,7 +50,9 @@ def main():
     lrs = [float(x) for x in re.findall(r"'learning_rate': ([\d.e-]+)", log)]
     evals = [float(x) for x in re.findall(r"'eval_loss': ([\d.]+)", log)]
 
-    alive = bool(sh("pgrep -f '[p]retrain_mlm.py'"))
+    # NOT a bare pgrep on the script name -- that matches the tmux server too (see
+    # scripts/is_training_alive.sh). A false "alive" is worse than no monitoring at all.
+    alive = subprocess.run(["scripts/is_training_alive.sh"], cwd=PROJECT_DIR).returncode == 0
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
     if not prog:
