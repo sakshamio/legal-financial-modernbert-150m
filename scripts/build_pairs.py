@@ -22,6 +22,7 @@ Three things here matter more for final nDCG than any pretraining tweak:
    two same-label examples in one batch -- otherwise MNRL treats one as a NEGATIVE for the other, and
    we actively train the model to push apart two genuinely similar clauses. See train_matryoshka.py.
 """
+import json
 import argparse
 import random
 import re
@@ -154,8 +155,48 @@ def build_edgar(n_pairs, seed=0):
 # --------------------------------------------------------------------------------------------------
 # hard negatives
 # --------------------------------------------------------------------------------------------------
+def mine_hard_negatives_go(pairs, n_neg=2):
+    """Hand the BM25 mining to gopairs. Same semantics; ~O(N) instead of O(N^2).
+
+    rank_bm25 scores EVERY document per query. Measured: 1,500 passages takes 50s, so 20,000 takes
+    ~2.5h per source -- roughly 10 hours for the four sources. gopairs uses an inverted index (only
+    documents that actually share a term with the query are touched) and goroutines.
+
+    Loading the HF datasets stays here -- it needs `datasets`. Only the mining, which is pure
+    computation with no Python library in it, moves to Go.
+    """
+    import subprocess
+
+    go_bin = PROJECT_DIR / "gopairs" / "gopairs"
+    if not go_bin.exists():
+        print("  gopairs not built; falling back to the Python reference (slow)")
+        return mine_hard_negatives(pairs, n_neg)
+
+    tmp_dir = PROJECT_DIR / "data" / "pairs"
+    tmp_dir.mkdir(parents=True, exist_ok=True)
+    fin, fout = tmp_dir / "_mine_in.jsonl", tmp_dir / "_mine_out.jsonl"
+
+    with open(fin, "w") as f:
+        for i, ex in enumerate(pairs):
+            f.write(json.dumps({"id": i, "anchor": ex["anchor"], "positive": ex["positive"],
+                                "label": str(ex["label"]), "source": ex["source"]}) + "\n")
+
+    subprocess.run([str(go_bin), "-in", str(fin), "-out", str(fout), "-k", str(n_neg)], check=True)
+
+    for line in open(fout):
+        r = json.loads(line)
+        for k, nid in enumerate(r["negatives"]):
+            pairs[r["id"]][f"negative_{k}"] = pairs[nid]["positive"]
+    fin.unlink(missing_ok=True)
+    fout.unlink(missing_ok=True)
+    return pairs
+
+
 def mine_hard_negatives(pairs, n_neg=2, seed=0):
-    """BM25 hard negatives: lexically similar to the anchor, but NOT its positive.
+    """Python REFERENCE implementation. gopairs is the one that actually runs; this documents the
+    semantics and stays available as a fallback.
+
+    BM25 hard negatives: lexically similar to the anchor, but NOT its positive.
 
     Why BM25 and not a dense model: we have no trained embedding model yet (that is the point of this
     stage), and legal text is exactly the regime where lexical overlap is high -- so BM25 surfaces
@@ -236,7 +277,7 @@ def main():
 
     if not args.no_hard_negatives:
         print(f"\nmining {args.n_negatives} BM25 hard negatives per pair (within-source, label-guarded)")
-        pairs = mine_hard_negatives(pairs, args.n_negatives, args.seed)
+        pairs = mine_hard_negatives_go(pairs, args.n_negatives)
 
     random.Random(args.seed).shuffle(pairs)
 
