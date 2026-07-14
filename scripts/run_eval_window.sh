@@ -28,7 +28,17 @@ fi
 
 # 1. wait for stage 2 to finish (it owns the GPU until then)
 while pgrep -f "[t]rain_matryoshka.py" > /dev/null; do sleep 60; done
-banner "stage 2 complete: $(ls -d $S2 2>/dev/null || echo MISSING)"
+
+# A VANISHED PROCESS IS NOT A COMPLETED RUN. Killing stage 2 mid-flight (to retune its batch size)
+# made this script conclude stage 2 was "done", evaluate a model directory that had just been
+# deleted, and resume Stage 1 -- so the decisive experiment silently never ran. Require the actual
+# artifact to exist before believing the run finished.
+if [ ! -f "$S2/config.json" ]; then
+  echo "ABORT: $S2 has no model -- stage 2 did not complete (killed?). Not running evals, not"
+  echo "resuming training. Fix stage 2 and re-arm."
+  exit 1
+fi
+banner "stage 2 complete: $S2"
 
 # ---------------------------------------------------------------- the actual question
 banner "1/6  MTEB -- STAGE 2 MODEL (all dims, financial + legal)"
