@@ -15,7 +15,7 @@ set -u
 cd "$(dirname "$0")/.."
 export PATH=$HOME/.local/bin:$PATH
 V=~/jupyterlab/.venv/bin/python
-RECIPE="@official/qwen3.6-35b-a3b-fp8-vllm"   # non-mtp: more stable than the speculative-decode variant
+RECIPE="@official/qwen3.6-27b-fp8-vllm"   # 27B DENSE fp8 on vLLM (cached image). Dense avoids the MoE routing that crashed the 35B; no sglang image-pull wait
 PORT=8000
 BASE="http://127.0.0.1:${PORT}/v1"
 TARGET="${TARGET:-1000000}"
