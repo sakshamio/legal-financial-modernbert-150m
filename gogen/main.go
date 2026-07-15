@@ -92,14 +92,57 @@ var queryStyles = []string{
 
 var categories []string
 
-type cell struct{ category, subtype, clause, sector, jur, party, ctx string }
+type cell struct{ category, subtype, clause, sector, jur, party, ctx, angle, concrete string }
+
+// Only 815 core (category x doc x clause) cells exist, so at ~1M pairs each is hit ~400 times and the
+// model mode-collapses onto canonical phrasings (measured: an opening like "during the term and for a
+// period of twelve (12) months following" recurred 14x). To force textual divergence we inject
+// randomized CONCRETE PARTICULARS -- specific figures/dates/names the passage must incorporate -- plus
+// a random stylistic angle. Concrete specifics make even same-clause passages read as distinct
+// instances rather than templates.
+var angles = []string{
+	"heavily negotiated with unusual carve-outs", "borrower/obligor-favorable", "counterparty-favorable",
+	"a short, tightly drafted version", "a long, comprehensive version with sub-clauses",
+	"with an atypical exception or proviso", "cross-referencing several defined terms and schedules",
+	"plain-language / modern-drafting style", "traditional/formal drafting style",
+	"with specific numeric thresholds and triggers", "amended-and-restated with a conforming change",
+}
+var entityStems = []string{"Aldermere", "Brightwater", "Calderon", "Deverell", "Ellingham", "Fairmont Ridge",
+	"Granville", "Harnwell", "Ironbridge", "Juniper Peak", "Kestrelton", "Larkspur", "Montclair Systems",
+	"Northgate", "Orrington", "Pemberton", "Quillfield", "Rosseland", "Sterling Vale", "Thornbury",
+	"Umberland", "Vanterra", "Westmark", "Yarborough", "Zephyr Cove"}
+
+func randConcrete(r *rand.Rand) string {
+	pct := 1 + r.Intn(1499)           // 0.01%..15.00%
+	amt := (1 + r.Intn(950)) * 100000 // $100k..$95M
+	months := []int{3, 6, 12, 18, 24, 36, 48, 60}[r.Intn(8)]
+	days := []int{5, 10, 15, 30, 45, 60, 90}[r.Intn(7)]
+	e1 := entityStems[r.Intn(len(entityStems))]
+	e2 := entityStems[r.Intn(len(entityStems))]
+	yr := 2018 + r.Intn(8)
+	return fmt.Sprintf("weave in these specific particulars (invent more as needed): a party named %q and a counterparty named %q; a figure around $%s; a rate/threshold near %.2f%%; a period of %d months; a %d-day notice; a date in %d",
+		e1+" Holdings", e2+" Capital", commas(amt), float64(pct)/100.0, months, days, yr)
+}
+
+func commas(n int) string {
+	s := fmt.Sprintf("%d", n)
+	var out []byte
+	for i, c := range []byte(s) {
+		if i > 0 && (len(s)-i)%3 == 0 {
+			out = append(out, ',')
+		}
+		out = append(out, c)
+	}
+	return string(out)
+}
 
 func sampleCell(r *rand.Rand) cell {
 	cat := categories[r.Intn(len(categories))]
 	t := taxonomy[cat]
 	return cell{cat, t.docs[r.Intn(len(t.docs))], t.clauses[r.Intn(len(t.clauses))],
 		sectors[r.Intn(len(sectors))], jurisdictions[r.Intn(len(jurisdictions))],
-		parties[r.Intn(len(parties))], contexts[r.Intn(len(contexts))]}
+		parties[r.Intn(len(parties))], contexts[r.Intn(len(contexts))],
+		angles[r.Intn(len(angles))], randConcrete(r)}
 }
 
 type chatMsg struct {
@@ -120,14 +163,16 @@ Setting (use it to make the text specific and varied):
 - Governing law: %s
 - A principal party: %s
 - Context: %s
+- Drafting angle: %s
+- To make this a DISTINCT instance rather than a generic template, %s
 
 Return a JSON object with exactly these keys:
-- "passage": a realistic 90-160 word excerpt from the "%s" focused on "%s". Write it the way a real %s reads -- defined terms, cross-references, appropriate legal/financial register. Do NOT include a heading or the document title; just the operative text.
+- "passage": a realistic 90-160 word excerpt from the "%s" focused on "%s". Write it the way a real %s reads -- defined terms, cross-references, appropriate legal/financial register, reflecting the drafting angle and the specific particulars above. Do NOT include a heading or the document title; just the operative text.
 - "queries": a list of %d DISTINCT search queries that this passage answers. Vary them: (%s). Do not copy long phrases from the passage verbatim.
 - "hard_negative": a realistic 90-160 word excerpt that is SIMILAR in topic/document type (a related clause or a neighbouring provision) but that does NOT actually answer the queries -- a plausible wrong retrieval result.
 
 Output only the JSON object.`,
-		c.category, c.subtype, c.clause, c.sector, c.jur, c.party, c.ctx, c.subtype, c.clause, c.subtype, nq, styles)
+		c.category, c.subtype, c.clause, c.sector, c.jur, c.party, c.ctx, c.angle, c.concrete, c.subtype, c.clause, c.subtype, nq, styles)
 	return []chatMsg{{"system", sys}, {"user", user}}
 }
 
