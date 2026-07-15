@@ -48,3 +48,4 @@ STATUS.md
 # Compiled Go binary (rebuild with: cd gosample && go build -o gosample .)
 gosample/gosample
 gopairs/gopairs
+data/pairs_synth_taxonomy/
