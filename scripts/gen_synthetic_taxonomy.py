@@ -38,7 +38,7 @@ import json
 import random
 import threading
 import time
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, FIRST_COMPLETED, wait
 from pathlib import Path
 
 import httpx
@@ -225,10 +225,18 @@ def main():
 
     client = httpx.Client(base_url=args.base_url, timeout=180.0)
     try:
-        client.get("/models")
+        # tolerate a brief blip at startup rather than exiting immediately (the supervisor would just
+        # re-run us, which is wasteful)
+        ok = False
+        for _ in range(6):
+            try:
+                client.get("/models"); ok = True; break
+            except Exception:
+                time.sleep(10)
+        if not ok:
+            raise SystemExit(f"no server at {args.base_url} after retries")
     except Exception as e:
-        raise SystemExit(f"no server at {args.base_url} ({e}). Start one:\n"
-                         f"  sparkrun run @official/qwen3.6-35b-a3b-fp8-mtp-vllm --port 8000")
+        raise SystemExit(f"no server at {args.base_url} ({e})")
     model_name = args.model or client.get("/models").json()["data"][0]["id"]
 
     out_dir = Path(args.out)
@@ -252,6 +260,17 @@ def main():
     counts = {"pairs": have_pairs, "calls": 0, "fail": 0}
 
     def work(_):
+        # Bulletproof: NOTHING may propagate out of here, or ThreadPoolExecutor.map re-raises it in
+        # the driving list() and kills the whole run. A transient server error must cost one cluster,
+        # never the job.
+        try:
+            _work(_)
+        except Exception:
+            with lock:
+                counts["calls"] += 1
+                counts["fail"] += 1
+
+    def _work(_):
         cell = sample_cell(random.Random(rng.random()))
         msgs = build_messages(**cell, n_queries=args.queries_per_cluster)
         try:
@@ -291,14 +310,20 @@ def main():
                       flush=True)
 
     with open(out_path, "a") as fout:
+        # BOUNDED submission. The previous `pool.map(work, jobs())` over an UNBOUNDED generator was a
+        # 60GB memory leak: pool.map eagerly pulls from the generator and queues pending futures far
+        # faster than the slow API calls drain them, so millions of task objects pile up. That memory
+        # blowout is what tripped earlyoom (configured --prefer python|vllm), which then killed the
+        # vLLM server -- the real cause of every "crash". Keep at most 2x concurrency in flight.
+        max_inflight = args.concurrency * 2
         with ThreadPoolExecutor(max_workers=args.concurrency) as pool:
-            # feed lazily so we can stop as soon as the pair target is met
-            def jobs():
-                i = 0
-                while counts["pairs"] < args.target_pairs:
-                    yield i
-                    i += 1
-            list(pool.map(work, jobs()))
+            inflight = set()
+            while counts["pairs"] < args.target_pairs:
+                while len(inflight) < max_inflight and counts["pairs"] < args.target_pairs:
+                    inflight.add(pool.submit(work, None))
+                done, inflight = wait(inflight, return_when=FIRST_COMPLETED)
+            for f in inflight:
+                f.result()
 
     print(f"\ndone: {counts['pairs']:,} pairs -> {out_path}  ({(time.time()-t0)/3600:.1f}h, "
           f"fail {counts['fail']/max(counts['calls'],1):.1%})")
