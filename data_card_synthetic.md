@@ -16,6 +16,11 @@ tags:
 pretty_name: Financial & Legal Synthetic Retrieval Pairs
 size_categories:
 - 100K<n<1M
+configs:
+- config_name: default
+  data_files:
+  - split: train
+    path: train.jsonl
 ---
 
 # Financial & Legal Synthetic Retrieval Pairs

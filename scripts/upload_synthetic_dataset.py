@@ -28,8 +28,6 @@ def main():
 
     if not DATA.exists():
         raise SystemExit(f"{DATA} missing -- generate first")
-    n = sum(1 for _ in open(DATA))
-    print(f"{n:,} pairs in {DATA}")
 
     api = HfApi()
     api.create_repo(args.repo, repo_type="dataset", exist_ok=True)
@@ -37,10 +35,34 @@ def main():
     stage = PROJECT_DIR / "data" / "_hf_upload"
     stage.mkdir(exist_ok=True)
 
+    # CLEAN SNAPSHOT. gogen APPENDS to train.jsonl continuously; uploading it live can capture a
+    # half-written final line, which makes the HF dataset viewer choke ("Unexpected token '<'"). So we
+    # snapshot into staging, drop any incomplete trailing line, and drop any line that does not parse.
+    clean = stage / "_clean.jsonl"
+    kept = dropped = 0
+    with open(DATA, "rb") as src, open(clean, "w") as dst:
+        data = src.read()
+        # ignore anything after the last newline (a partial in-progress append)
+        if not data.endswith(b"\n"):
+            data = data[: data.rfind(b"\n") + 1]
+        for line in data.decode("utf-8", errors="ignore").splitlines():
+            if not line.strip():
+                continue
+            try:
+                json.loads(line)
+            except Exception:
+                dropped += 1
+                continue
+            dst.write(line + "\n")
+            kept += 1
+    DATA_CLEAN = clean
+    n = kept
+    print(f"{n:,} valid pairs snapshotted ({dropped} malformed dropped)")
+
     if args.split_val > 0:
         # deterministic val carve so the split is reproducible and disjoint
         rng = random.Random(args.seed)
-        rows = DATA.read_text().splitlines()
+        rows = DATA_CLEAN.read_text().splitlines()
         rng.shuffle(rows)
         val, train = rows[: args.split_val], rows[args.split_val :]
         (stage / "train.jsonl").write_text("\n".join(train) + "\n")
@@ -48,7 +70,7 @@ def main():
         print(f"  split -> train {len(train):,} / val {len(val):,}")
         files = ["train.jsonl", "val.jsonl"]
     else:
-        (stage / "train.jsonl").write_bytes(DATA.read_bytes())
+        (stage / "train.jsonl").write_bytes(DATA_CLEAN.read_bytes())
         files = ["train.jsonl"]
 
     for f in files:
