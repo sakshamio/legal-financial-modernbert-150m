@@ -296,7 +296,7 @@ type outRec struct {
 func main() {
 	target := flag.Int("target", 1000000, "pair target")
 	nq := flag.Int("nq", 3, "queries per cluster")
-	base := flag.String("base", "http://127.0.0.1:8000/v1", "OpenAI-compatible endpoint")
+	base := flag.String("base", "http://127.0.0.1:8000/v1", "OpenAI endpoint(s), comma-separated for multi-model")
 	conc := flag.Int("conc", 48, "concurrent requests (fixed goroutines -> bounded memory)")
 	maxTok := flag.Int("max-tokens", 700, "")
 	seed := flag.Int64("seed", 0, "")
@@ -307,10 +307,25 @@ func main() {
 		categories = append(categories, k)
 	}
 
-	// discover model id
-	modelID := discoverModel(*base)
-	if modelID == "" {
-		fmt.Fprintln(os.Stderr, "no server / model at", *base)
+	// One or more endpoints. Workers round-robin across them, so two different models generate into the
+	// SAME single output file (one writer, mutex-guarded) -- diversity + bandwidth-efficient throughput,
+	// without two processes corrupting the file. Each pair records which model produced it.
+	var bases, modelIDs []string
+	for _, b := range strings.Split(*base, ",") {
+		b = strings.TrimSpace(b)
+		if b == "" {
+			continue
+		}
+		m := discoverModel(b)
+		if m == "" {
+			fmt.Fprintln(os.Stderr, "no server / model at", b)
+			continue
+		}
+		bases = append(bases, b)
+		modelIDs = append(modelIDs, m)
+	}
+	if len(bases) == 0 {
+		fmt.Fprintln(os.Stderr, "no reachable endpoints")
 		os.Exit(1)
 	}
 
@@ -322,7 +337,7 @@ func main() {
 	have := countLines(outPath)
 	var pairs int64 = int64(have)
 	var calls, fails int64
-	fmt.Printf("server %s | model %s | have %d pairs, target %d\n", *base, modelID, have, *target)
+	fmt.Printf("endpoints %v | models %v | have %d pairs, target %d\n", bases, modelIDs, have, *target)
 
 	f, err := os.OpenFile(outPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
 	if err != nil {
@@ -353,14 +368,22 @@ func main() {
 					return
 				}
 				c := sampleCell(r)
-				cl := generate(client, *base, modelID, buildMessages(c, *nq), *maxTok)
+				// round-robin across endpoints; smaller model gets the same share of calls but
+				// finishes faster, so it naturally contributes more pairs (bandwidth-efficient)
+				ep := int(atomic.AddInt64(&calls, 0)+int64(worker)) % len(bases)
+				cl := generate(client, bases[ep], modelIDs[ep], buildMessages(c, *nq), *maxTok)
 				n := atomic.AddInt64(&calls, 1)
 				if cl == nil {
 					atomic.AddInt64(&fails, 1)
 				} else {
 					lab := fmt.Sprintf("synth-%s-%s-%d", c.category, c.subtype, n)
 					src := "synth_" + strings.ToLower(strings.Fields(c.category)[0])
-					meta := map[string]string{"category": c.category, "subtype": c.subtype, "clause": c.clause}
+					shortModel := modelIDs[ep]
+					if idx := strings.LastIndex(shortModel, "/"); idx >= 0 {
+						shortModel = shortModel[idx+1:]
+					}
+					meta := map[string]string{"category": c.category, "subtype": c.subtype,
+						"clause": c.clause, "gen_model": shortModel}
 					wmu.Lock()
 					for _, q := range cl.Queries {
 						rec := outRec{"[QUERY] " + q, "[PASSAGE] " + cl.Passage, lab, src, meta, ""}

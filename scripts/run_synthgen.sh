@@ -19,12 +19,13 @@ export PATH=$HOME/.local/bin:$PATH
 V=~/jupyterlab/.venv/bin/python
 RECIPE="${RECIPE:-@official/qwen3.6-27b-fp8-vllm}"   # dense 27B; MoE was never the real problem
 PORT=8000
-BASE="http://127.0.0.1:${PORT}/v1"
+BASE="${BASES:-http://127.0.0.1:${PORT}/v1}"   # BASES may be comma-separated for multi-model
 TARGET="${TARGET:-1000000}"
 CONC="${CONC:-48}"
 OUT=data/pairs_synth_taxonomy
 
-server_up() { curl -s --max-time 8 "${BASE}/models" 2>/dev/null | grep -q '"id"'; }
+PRIMARY="http://127.0.0.1:${PORT}/v1"
+server_up() { curl -s --max-time 8 "${PRIMARY}/models" 2>/dev/null | grep -q '"id"'; }
 pairs_on_disk() { wc -l < "$OUT/train.jsonl" 2>/dev/null || echo 0; }
 
 launch_server() {
