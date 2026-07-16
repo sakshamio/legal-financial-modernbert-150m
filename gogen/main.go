@@ -78,6 +78,19 @@ var taxonomy = map[string]struct {
 		[]string{"distribution agreement", "transfer agency agreement", "custody agreement", "prime brokerage agreement", "model portfolio agreement", "administration agreement"},
 		[]string{"standard of care", "indemnification and liability", "fees and expense reimbursement", "termination and transition", "reporting and recordkeeping", "rehypothecation", "margin and financing", "NAV calculation and error correction", "proxy voting"},
 	},
+	// ---- expansion: analyst/SEC QnA + structured credit + '40 Act fund docs -------------------
+	"Analyst Research & SEC QnA": {
+		[]string{"equity research note", "earnings call transcript Q&A", "sell-side initiation report", "credit research note", "MD&A commentary", "investor day presentation", "10-K management discussion", "10-Q results commentary", "8-K event analysis", "guidance revision note", "rating agency commentary"},
+		[]string{"revenue drivers and guidance", "gross and operating margin analysis", "segment performance", "free cash flow and capital allocation", "leverage and liquidity", "guidance raise or cut and drivers", "competitive positioning and moat", "valuation rationale and multiples", "near-term catalysts", "KPI and unit economics", "risk factors and headwinds", "management commentary on demand", "backlog and bookings", "working capital and inventory", "capex and reinvestment"},
+	},
+	"Structured Credit & Securitization": {
+		[]string{"ABS offering circular", "RMBS prospectus supplement", "CMBS pooling and servicing agreement", "CLO indenture", "auto loan ABS trust indenture", "credit card master trust agreement", "student loan ABS", "equipment lease ABS", "mortgage servicing agreement", "ABS warehouse facility", "collateral management agreement", "note purchase agreement (securitization)"},
+		[]string{"tranching and subordination", "payment waterfall and priority of payments", "credit enhancement and reserve accounts", "overcollateralization test", "interest coverage test", "servicer duties and servicing standard", "eligibility criteria for receivables", "representations and warranties on the pool", "events of default and acceleration", "optional redemption and clean-up call", "reinvestment period and criteria", "collateral quality tests", "excess spread and turbo amortization", "trigger events and early amortization", "risk retention"},
+	},
+	"Fund Formation & '40 Act": {
+		[]string{"CLO collateral management agreement", "1940 Act compliance policy", "closed-end fund charter", "BDC advisory agreement", "interval fund prospectus", "side letter", "LPA amendment", "subscription booklet", "seed investor agreement", "GP commitment letter"},
+		[]string{"1940 Act diversification (Subchapter M)", "affiliated transactions (Sections 17(a)/17(d))", "senior securities and leverage limits (Section 18)", "custody rule compliance (17(f))", "fair valuation (Rule 2a-5)", "advisory contract approval (Section 15(c))", "independent director oversight", "CLO reinvestment criteria", "collateral quality and concentration limits", "asset coverage ratio", "co-investment exemptive relief", "most favored nation and side-letter election"},
+	},
 }
 
 var sectors = []string{"technology", "healthcare", "energy", "financial services", "real estate", "manufacturing", "consumer/retail", "telecommunications", "biotech/pharma", "infrastructure", "media", "renewable energy", "private equity portfolio company", "hedge fund", "insurance"}
@@ -92,7 +105,22 @@ var queryStyles = []string{
 
 var categories []string
 
-type cell struct{ category, subtype, clause, sector, jur, party, ctx, angle, concrete string }
+type cell struct {
+	category, subtype, clause, sector, jur, party, ctx, angle, concrete, format string
+}
+
+// Real filings/reports are full of TABLES (tranche structures, financial statements, covenant
+// compliance, cap tables, fee schedules), and PDF->markdown extraction makes them MESSY -- misaligned
+// pipes, merged headers, footnote markers, inconsistent decimals/units. A retriever must handle
+// queries over that, so a large share of passages are generated as (or around) a messy markdown
+// table. The rest stay prose. ~45% tabular.
+var formats = []string{
+	"", "", "", "", "", "", // prose (majority weight)
+	"Render the passage AS a messy markdown table extracted from a PDF: misaligned pipes, an occasional merged/blank header cell, footnote markers like (1)/(2), and inconsistent decimals or units ($ in thousands vs millions). Put a realistic tranche/financial/fee/covenant table appropriate to the clause, with a short lead-in sentence.",
+	"Embed a small, messy markdown table of the key figures inside the passage (columns slightly misaligned, a stray footnote, mixed $mm and $000s), with prose around it.",
+	"Include a markdown table with realistic line items relevant to the clause (e.g. tranche/class, balance, coupon, rating; or period, revenue, margin; or fee tier, rate) -- formatted imperfectly as if OCR'd from a filing.",
+	"Present a covenant-compliance or capitalization style markdown table (required vs actual, or class vs amount vs %) with minor formatting noise and a footnote.",
+}
 
 // Only 815 core (category x doc x clause) cells exist, so at ~1M pairs each is hit ~400 times and the
 // model mode-collapses onto canonical phrasings (measured: an opening like "during the term and for a
@@ -107,21 +135,49 @@ var angles = []string{
 	"plain-language / modern-drafting style", "traditional/formal drafting style",
 	"with specific numeric thresholds and triggers", "amended-and-restated with a conforming change",
 }
+
+// Invented entity stems -- for fictional counterparties, portfolio companies, SPVs, and issuers.
 var entityStems = []string{"Aldermere", "Brightwater", "Calderon", "Deverell", "Ellingham", "Fairmont Ridge",
 	"Granville", "Harnwell", "Ironbridge", "Juniper Peak", "Kestrelton", "Larkspur", "Montclair Systems",
 	"Northgate", "Orrington", "Pemberton", "Quillfield", "Rosseland", "Sterling Vale", "Thornbury",
-	"Umberland", "Vanterra", "Westmark", "Yarborough", "Zephyr Cove"}
+	"Umberland", "Vanterra", "Westmark", "Yarborough", "Zephyr Cove", "Ashford Bay", "Coldwater",
+	"Dunmore", "Everly", "Hollingsworth", "Marlowe", "Redfern", "Stanhope", "Wexford"}
+
+// Real firms across banks, PE/credit funds, and asset managers -- structured credit, IMAs, and side
+// letters really involve these players, so naming them makes retrieval queries realistic. Used only
+// as training signal inside clearly-synthetic passages (see the dataset card).
+var realFirms = []string{"JPMorgan", "Goldman Sachs", "Morgan Stanley", "Bank of America", "Citigroup",
+	"Wells Fargo", "Deutsche Bank", "Barclays", "BNP Paribas", "MUFG",
+	"Blackstone", "Apollo Global", "KKR", "Carlyle Group", "Ares Management", "Brookfield", "Oaktree",
+	"Blue Owl", "Sixth Street", "HPS Investment Partners", "Golub Capital", "Antares Capital",
+	"Angelo Gordon", "Monroe Capital", "Diameter Capital", "Sculptor Capital",
+	"BlackRock", "PIMCO", "Fidelity", "Vanguard", "State Street", "Nuveen", "Invesco", "Franklin Templeton",
+	"Berkshire Hathaway", "Prudential", "MetLife",
+	// niche / mid-market names
+	"Varagon Capital", "Twin Brook Capital", "Comvest Partners", "MidCap Financial", "Churchill Asset Management",
+	"Benefit Street Partners", "Crescent Capital", "Audax Group", "NewStar Financial", "Fortress"}
+
+func pickEntity(r *rand.Rand, suffix string) string {
+	if r.Intn(100) < 55 { // ~55% real firm, ~45% invented counterparty/SPV
+		return realFirms[r.Intn(len(realFirms))]
+	}
+	return entityStems[r.Intn(len(entityStems))] + suffix
+}
 
 func randConcrete(r *rand.Rand) string {
-	pct := 1 + r.Intn(1499)           // 0.01%..15.00%
-	amt := (1 + r.Intn(950)) * 100000 // $100k..$95M
-	months := []int{3, 6, 12, 18, 24, 36, 48, 60}[r.Intn(8)]
+	pct := 1 + r.Intn(1499) // 0.01%..15.00%
+	bps := []int{25, 50, 75, 100, 125, 150, 200, 250, 300, 350, 400, 500, 650}[r.Intn(13)]
+	amt := (1 + r.Intn(4990)) * 100000 // $100k..$499M
+	months := []int{3, 6, 12, 18, 24, 36, 48, 60, 84}[r.Intn(9)]
 	days := []int{5, 10, 15, 30, 45, 60, 90}[r.Intn(7)]
-	e1 := entityStems[r.Intn(len(entityStems))]
-	e2 := entityStems[r.Intn(len(entityStems))]
+	ratio := []string{"1.10x", "1.25x", "1.50x", "2.00x", "2.50x", "3.00x", "3.50x", "4.25x", "5.00x", "6.00x"}[r.Intn(10)]
+	rating := []string{"AAA/Aaa", "AA/Aa2", "A/A2", "BBB/Baa2", "BB/Ba2", "B/B2"}[r.Intn(6)]
+	e1 := pickEntity(r, " Holdings")
+	e2 := pickEntity(r, " Capital")
 	yr := 2018 + r.Intn(8)
-	return fmt.Sprintf("weave in these specific particulars (invent more as needed): a party named %q and a counterparty named %q; a figure around $%s; a rate/threshold near %.2f%%; a period of %d months; a %d-day notice; a date in %d",
-		e1+" Holdings", e2+" Capital", commas(amt), float64(pct)/100.0, months, days, yr)
+	q := []string{"Q1", "Q2", "Q3", "Q4"}[r.Intn(4)]
+	return fmt.Sprintf("weave in these specific particulars (invent more as needed) and keep the numbers realistic: a party named %q and a counterparty named %q; a principal/notional around $%s; a coupon/rate near %.2f%% (or +%d bps over SOFR); a coverage/leverage ratio of %s; a %s tranche/rating; a period of %d months; a %d-day notice/cure; a reporting period of %s %d",
+		e1, e2, commas(amt), float64(pct)/100.0, bps, ratio, rating, months, days, q, yr)
 }
 
 func commas(n int) string {
@@ -142,7 +198,7 @@ func sampleCell(r *rand.Rand) cell {
 	return cell{cat, t.docs[r.Intn(len(t.docs))], t.clauses[r.Intn(len(t.clauses))],
 		sectors[r.Intn(len(sectors))], jurisdictions[r.Intn(len(jurisdictions))],
 		parties[r.Intn(len(parties))], contexts[r.Intn(len(contexts))],
-		angles[r.Intn(len(angles))], randConcrete(r)}
+		angles[r.Intn(len(angles))], randConcrete(r), formats[r.Intn(len(formats))]}
 }
 
 type chatMsg struct {
@@ -151,7 +207,9 @@ type chatMsg struct {
 }
 
 func buildMessages(c cell, nq int) []chatMsg {
-	sys := "You generate realistic financial/legal training data. You always respond with a single valid JSON object and nothing else -- no markdown, no code fences, no commentary."
+	// The JSON ENVELOPE has no code fences, but the "passage"/"hard_negative" string VALUES may contain
+	// markdown tables (newlines and pipes, properly JSON-escaped). That is intended, not a violation.
+	sys := "You generate realistic financial/legal training data. Respond with a single valid JSON object and nothing else -- no code fences around the JSON, no commentary. The passage string itself MAY contain a markdown table (escape newlines as \\n)."
 	styles := strings.Join(queryStyles[:nq], "; ")
 	user := fmt.Sprintf(`You are an expert transactional attorney and financial analyst. Produce one realistic training cluster for a retrieval model.
 
@@ -165,15 +223,24 @@ Setting (use it to make the text specific and varied):
 - Context: %s
 - Drafting angle: %s
 - To make this a DISTINCT instance rather than a generic template, %s
+- Format: %s
 
 Return a JSON object with exactly these keys:
-- "passage": a realistic 90-160 word excerpt from the "%s" focused on "%s". Write it the way a real %s reads -- defined terms, cross-references, appropriate legal/financial register, reflecting the drafting angle and the specific particulars above. Do NOT include a heading or the document title; just the operative text.
+- "passage": a realistic 90-180 word excerpt from the "%s" focused on "%s". Write it the way a real %s reads -- defined terms, cross-references, appropriate legal/financial register, reflecting the drafting angle, the specific particulars, and the Format instruction above. Do NOT include a heading or the document title; just the operative text (with a table if the Format asks for one). If a table is included, at least one query MUST ask about a specific value in it.
 - "queries": a list of %d DISTINCT search queries that this passage answers. Vary them: (%s). Do not copy long phrases from the passage verbatim.
-- "hard_negative": a realistic 90-160 word excerpt that is SIMILAR in topic/document type (a related clause or a neighbouring provision) but that does NOT actually answer the queries -- a plausible wrong retrieval result.
+- "hard_negative": a realistic excerpt that is SIMILAR in topic/document type (a related clause or a neighbouring provision, matching the Format) but that does NOT actually answer the queries -- a plausible wrong retrieval result.
 
 Output only the JSON object.`,
-		c.category, c.subtype, c.clause, c.sector, c.jur, c.party, c.ctx, c.angle, c.concrete, c.subtype, c.clause, c.subtype, nq, styles)
+		c.category, c.subtype, c.clause, c.sector, c.jur, c.party, c.ctx, c.angle, c.concrete,
+		fmtOrProse(c.format), c.subtype, c.clause, c.subtype, nq, styles)
 	return []chatMsg{{"system", sys}, {"user", user}}
+}
+
+func fmtOrProse(f string) string {
+	if f == "" {
+		return "plain prose (no table)"
+	}
+	return f
 }
 
 type cluster struct {
