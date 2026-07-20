@@ -1,0 +1,165 @@
+{
+  "step": 16000,
+  "geometry": {
+    "mean_pairwise_cosine": 0.7136781811714172,
+    "dims_for_90pct_var": 77,
+    "dims_for_95pct_var": 103,
+    "dims_for_99pct_var": 152,
+    "effective_rank": 71.20377349853516,
+    "total_dims": 768,
+    "variance_in_first_k_coords": {
+      "64": 0.07561298459768295,
+      "128": 0.15964409708976746,
+      "256": 0.3299465775489807,
+      "512": 0.6587281823158264,
+      "768": 1.0
+    }
+  },
+  "extrapolation": {
+    "fit": {
+      "a": 9999.99999999995,
+      "b": 1.0412340649539045,
+      "c": 1.3866627730247758
+    },
+    "irreducible_loss_c": 1.3866627730247758,
+    "predicted_at_max_steps": 1.4086924079705068,
+    "fitted_on_steps": [
+      3050,
+      20300
+    ]
+  },
+  "freq_buckets": {
+    "top 100": {
+      "loss": 0.6807230564989383,
+      "acc": 0.8294336321889351,
+      "n": 4573
+    },
+    "100-1k": {
+      "loss": 1.8772392350513485,
+      "acc": 0.5971158179360072,
+      "n": 2219
+    },
+    "1k-10k": {
+      "loss": 2.623229557703933,
+      "acc": 0.5115332428765265,
+      "n": 2211
+    },
+    "10k+": {
+      "loss": 3.6468216115648056,
+      "acc": 0.4548611111111111,
+      "n": 864
+    }
+  },
+  "domain_tokens": {
+    "top1_accuracy": 0.3,
+    "n": 10,
+    "rows": [
+      {
+        "term": "U.S.C.",
+        "rank_of_correct": 1,
+        "top1_correct": true,
+        "top3": [
+          "U.S.C.",
+          "",
+          ""
+        ]
+      },
+      {
+        "term": "C.F.R.",
+        "rank_of_correct": 5,
+        "top1_correct": false,
+        "top3": [
+          "{",
+          "",
+          ""
+        ]
+      },
+      {
+        "term": "10-K",
+        "rank_of_correct": 2,
+        "top1_correct": false,
+        "top3": [
+          "8-K",
+          "10-K",
+          "8-K"
+        ]
+      },
+      {
+        "term": "10-Q",
+        "rank_of_correct": 1,
+        "top1_correct": true,
+        "top3": [
+          "10-Q",
+          "10-K",
+          "10-Q"
+        ]
+      },
+      {
+        "term": "8-K",
+        "rank_of_correct": 1,
+        "top1_correct": true,
+        "top3": [
+          "8-K",
+          "8-K",
+          ""
+        ]
+      },
+      {
+        "term": "P.A.",
+        "rank_of_correct": 174,
+        "top1_correct": false,
+        "top3": [
+          "",
+          "inserting",
+          ""
+        ]
+      },
+      {
+        "term": "e.g.",
+        "rank_of_correct": 178,
+        "top1_correct": false,
+        "top3": [
+          "debentures",
+          "mortgages",
+          "instruments"
+        ]
+      },
+      {
+        "term": "\u00a7\u00a7",
+        "rank_of_correct": 11,
+        "top1_correct": false,
+        "top3": [
+          "",
+          "...............",
+          ""
+        ]
+      },
+      {
+        "term": "Inc.",
+        "rank_of_correct": 6,
+        "top1_correct": false,
+        "top3": [
+          "",
+          ",",
+          "."
+        ]
+      },
+      {
+        "term": "Q3",
+        "rank_of_correct": 155,
+        "top1_correct": false,
+        "top3": [
+          "quarter",
+          "%",
+          "quarters"
+        ]
+      }
+    ]
+  },
+  "loss_by_position": [
+    1.6163802136163476,
+    1.6301156495061984,
+    1.7184352834694272,
+    1.614839557917936
+  ]
+}
