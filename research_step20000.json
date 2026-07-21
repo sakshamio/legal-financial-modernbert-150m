@@ -1,0 +1,665 @@
+{
+  "step": 20000,
+  "nesting": {
+    "by_k": {
+      "8": {
+        "var_fraction": 0.009319986216723919,
+        "null": 0.010416666666666666,
+        "concentration_ratio": 0.8947186768054962
+      },
+      "16": {
+        "var_fraction": 0.01898087188601494,
+        "null": 0.020833333333333332,
+        "concentration_ratio": 0.911081850528717
+      },
+      "32": {
+        "var_fraction": 0.041356559842824936,
+        "null": 0.041666666666666664,
+        "concentration_ratio": 0.9925574362277985
+      },
+      "64": {
+        "var_fraction": 0.07972656935453415,
+        "null": 0.08333333333333333,
+        "concentration_ratio": 0.9567188322544098
+      },
+      "128": {
+        "var_fraction": 0.16339170932769775,
+        "null": 0.16666666666666666,
+        "concentration_ratio": 0.9803502559661865
+      },
+      "256": {
+        "var_fraction": 0.3331679701805115,
+        "null": 0.3333333333333333,
+        "concentration_ratio": 0.9995039105415344
+      },
+      "384": {
+        "var_fraction": 0.49445250630378723,
+        "null": 0.5,
+        "concentration_ratio": 0.9889050126075745
+      },
+      "512": {
+        "var_fraction": 0.6598580479621887,
+        "null": 0.6666666666666666,
+        "concentration_ratio": 0.9897870719432831
+      },
+      "640": {
+        "var_fraction": 0.8283956050872803,
+        "null": 0.8333333333333334,
+        "concentration_ratio": 0.9940747261047362
+      },
+      "768": {
+        "var_fraction": 1.0,
+        "null": 1.0,
+        "concentration_ratio": 1.0
+      }
+    },
+    "coord_variance_gini": 0.15098373244415098,
+    "total_dims": 768
+  },
+  "domains": {
+    "domains": [
+      "financial_edgar",
+      "financial_pol",
+      "general_web",
+      "legal_caselaw",
+      "legal_contracts",
+      "legal_regulations"
+    ],
+    "linear_probe_acc": 0.8350694444444445,
+    "chance": 0.16666666666666666,
+    "fisher_ratio": 0.6576042978311883,
+    "centroid_cosine": {
+      "financial_edgar|financial_pol": 0.975989580154419,
+      "financial_edgar|general_web": 0.931919515132904,
+      "financial_edgar|legal_caselaw": 0.914709210395813,
+      "financial_edgar|legal_contracts": 0.9286032915115356,
+      "financial_edgar|legal_regulations": 0.9319159984588623,
+      "financial_pol|general_web": 0.9578157663345337,
+      "financial_pol|legal_caselaw": 0.942011296749115,
+      "financial_pol|legal_contracts": 0.9400099515914917,
+      "financial_pol|legal_regulations": 0.9483632445335388,
+      "general_web|legal_caselaw": 0.9376177787780762,
+      "general_web|legal_contracts": 0.8780452013015747,
+      "general_web|legal_regulations": 0.8991999626159668,
+      "legal_caselaw|legal_contracts": 0.890039324760437,
+      "legal_caselaw|legal_regulations": 0.9216464757919312,
+      "legal_contracts|legal_regulations": 0.9409574270248413
+    },
+    "law_vs_finance": 0.9313334226608276
+  },
+  "concept": {
+    "overall": {
+      "n": 322,
+      "exact_top1": 0.5403726708074534,
+      "class_top1": 0.6242236024844721,
+      "class_top5": 0.7515527950310559,
+      "median_rank": 1.0,
+      "concept_lead": 0.08385093167701863
+    },
+    "by_class": {
+      "signal": {
+        "n": 42,
+        "exact_top1": 0.5,
+        "class_top1": 0.5238095238095238,
+        "class_top5": 0.8333333333333334
+      },
+      "entity_suffix": {
+        "n": 48,
+        "exact_top1": 0.8125,
+        "class_top1": 0.8958333333333334,
+        "class_top5": 0.9583333333333334
+      },
+      "sec_form": {
+        "n": 42,
+        "exact_top1": 0.6904761904761905,
+        "class_top1": 0.9047619047619048,
+        "class_top5": 0.9047619047619048
+      },
+      "statute": {
+        "n": 74,
+        "exact_top1": 0.36486486486486486,
+        "class_top1": 0.40540540540540543,
+        "class_top5": 0.581081081081081
+      },
+      "reporter": {
+        "n": 51,
+        "exact_top1": 0.5686274509803921,
+        "class_top1": 0.6274509803921569,
+        "class_top5": 0.7450980392156863
+      },
+      "quarter_marker": {
+        "n": 24,
+        "exact_top1": 0.20833333333333334,
+        "class_top1": 0.5,
+        "class_top5": 0.625
+      },
+      "fin_shorthand": {
+        "n": 26,
+        "exact_top1": 0.6923076923076923,
+        "class_top1": 0.6923076923076923,
+        "class_top5": 0.8076923076923077
+      },
+      "subdivision": {
+        "n": 15,
+        "exact_top1": 0.4,
+        "class_top1": 0.4,
+        "class_top5": 0.4
+      }
+    },
+    "by_token": [
+      {
+        "term": "LLP",
+        "class": "entity_suffix",
+        "n": 6,
+        "median_rank": 1.0,
+        "exact_top1": 1.0,
+        "class_top1": 1.0,
+        "class_top5": 1.0
+      },
+      {
+        "term": "8-K",
+        "class": "sec_form",
+        "n": 6,
+        "median_rank": 1.0,
+        "exact_top1": 1.0,
+        "class_top1": 1.0,
+        "class_top5": 1.0
+      },
+      {
+        "term": "Inc.",
+        "class": "entity_suffix",
+        "n": 6,
+        "median_rank": 1.0,
+        "exact_top1": 1.0,
+        "class_top1": 1.0,
+        "class_top5": 1.0
+      },
+      {
+        "term": "N.A.",
+        "class": "entity_suffix",
+        "n": 6,
+        "median_rank": 1.0,
+        "exact_top1": 1.0,
+        "class_top1": 1.0,
+        "class_top5": 1.0
+      },
+      {
+        "term": "S-1",
+        "class": "sec_form",
+        "n": 6,
+        "median_rank": 1.0,
+        "exact_top1": 1.0,
+        "class_top1": 1.0,
+        "class_top5": 1.0
+      },
+      {
+        "term": "infra",
+        "class": "signal",
+        "n": 6,
+        "median_rank": 1.0,
+        "exact_top1": 1.0,
+        "class_top1": 1.0,
+        "class_top5": 1.0
+      },
+      {
+        "term": "id.",
+        "class": "signal",
+        "n": 6,
+        "median_rank": 1.0,
+        "exact_top1": 1.0,
+        "class_top1": 1.0,
+        "class_top5": 1.0
+      },
+      {
+        "term": "ROE",
+        "class": "fin_shorthand",
+        "n": 6,
+        "median_rank": 1.0,
+        "exact_top1": 1.0,
+        "class_top1": 1.0,
+        "class_top5": 1.0
+      },
+      {
+        "term": "ROI",
+        "class": "fin_shorthand",
+        "n": 6,
+        "median_rank": 1.0,
+        "exact_top1": 1.0,
+        "class_top1": 1.0,
+        "class_top5": 1.0
+      },
+      {
+        "term": "Pt.",
+        "class": "subdivision",
+        "n": 6,
+        "median_rank": 1.0,
+        "exact_top1": 1.0,
+        "class_top1": 1.0,
+        "class_top5": 1.0
+      },
+      {
+        "term": "F.3d",
+        "class": "reporter",
+        "n": 6,
+        "median_rank": 1.0,
+        "exact_top1": 1.0,
+        "class_top1": 1.0,
+        "class_top5": 1.0
+      },
+      {
+        "term": "F. Supp.",
+        "class": "reporter",
+        "n": 2,
+        "median_rank": 1.0,
+        "exact_top1": 1.0,
+        "class_top1": 1.0,
+        "class_top5": 1.0
+      },
+      {
+        "term": "i.e.",
+        "class": "signal",
+        "n": 6,
+        "median_rank": 1.0,
+        "exact_top1": 0.8333333333333334,
+        "class_top1": 1.0,
+        "class_top5": 1.0
+      },
+      {
+        "term": "Co.",
+        "class": "entity_suffix",
+        "n": 6,
+        "median_rank": 1.0,
+        "exact_top1": 0.8333333333333334,
+        "class_top1": 0.8333333333333334,
+        "class_top5": 1.0
+      },
+      {
+        "term": "Corp.",
+        "class": "entity_suffix",
+        "n": 6,
+        "median_rank": 1.0,
+        "exact_top1": 0.8333333333333334,
+        "class_top1": 1.0,
+        "class_top5": 1.0
+      },
+      {
+        "term": "U.S.C.",
+        "class": "statute",
+        "n": 6,
+        "median_rank": 1.0,
+        "exact_top1": 0.8333333333333334,
+        "class_top1": 1.0,
+        "class_top5": 1.0
+      },
+      {
+        "term": "S.B.",
+        "class": "statute",
+        "n": 6,
+        "median_rank": 1.0,
+        "exact_top1": 0.8333333333333334,
+        "class_top1": 0.8333333333333334,
+        "class_top5": 1.0
+      },
+      {
+        "term": "20-F",
+        "class": "sec_form",
+        "n": 6,
+        "median_rank": 1.0,
+        "exact_top1": 0.8333333333333334,
+        "class_top1": 1.0,
+        "class_top5": 1.0
+      },
+      {
+        "term": "F.2d",
+        "class": "reporter",
+        "n": 6,
+        "median_rank": 1.0,
+        "exact_top1": 0.8333333333333334,
+        "class_top1": 1.0,
+        "class_top5": 1.0
+      },
+      {
+        "term": "10-K",
+        "class": "sec_form",
+        "n": 6,
+        "median_rank": 1.0,
+        "exact_top1": 0.6666666666666666,
+        "class_top1": 1.0,
+        "class_top5": 1.0
+      },
+      {
+        "term": "Ltd.",
+        "class": "entity_suffix",
+        "n": 6,
+        "median_rank": 1.0,
+        "exact_top1": 0.6666666666666666,
+        "class_top1": 1.0,
+        "class_top5": 1.0
+      },
+      {
+        "term": "10-Q",
+        "class": "sec_form",
+        "n": 6,
+        "median_rank": 1.0,
+        "exact_top1": 0.6666666666666666,
+        "class_top1": 1.0,
+        "class_top5": 1.0
+      },
+      {
+        "term": "L.P.",
+        "class": "entity_suffix",
+        "n": 6,
+        "median_rank": 1.0,
+        "exact_top1": 0.6666666666666666,
+        "class_top1": 0.8333333333333334,
+        "class_top5": 1.0
+      },
+      {
+        "term": "P.A.",
+        "class": "statute",
+        "n": 6,
+        "median_rank": 1.0,
+        "exact_top1": 0.6666666666666666,
+        "class_top1": 0.6666666666666666,
+        "class_top5": 0.6666666666666666
+      },
+      {
+        "term": "S.E.",
+        "class": "reporter",
+        "n": 6,
+        "median_rank": 1.0,
+        "exact_top1": 0.6666666666666666,
+        "class_top1": 0.6666666666666666,
+        "class_top5": 0.8333333333333334
+      },
+      {
+        "term": "A.L.",
+        "class": "statute",
+        "n": 6,
+        "median_rank": 1.0,
+        "exact_top1": 0.6666666666666666,
+        "class_top1": 0.8333333333333334,
+        "class_top5": 0.8333333333333334
+      },
+      {
+        "term": "R.S.",
+        "class": "statute",
+        "n": 6,
+        "median_rank": 1.0,
+        "exact_top1": 0.6666666666666666,
+        "class_top1": 0.6666666666666666,
+        "class_top5": 0.8333333333333334
+      },
+      {
+        "term": "P.2d",
+        "class": "reporter",
+        "n": 6,
+        "median_rank": 1.0,
+        "exact_top1": 0.6666666666666666,
+        "class_top1": 0.6666666666666666,
+        "class_top5": 1.0
+      },
+      {
+        "term": "IFRS",
+        "class": "fin_shorthand",
+        "n": 6,
+        "median_rank": 1.0,
+        "exact_top1": 0.6666666666666666,
+        "class_top1": 0.6666666666666666,
+        "class_top5": 1.0
+      },
+      {
+        "term": "plc",
+        "class": "entity_suffix",
+        "n": 6,
+        "median_rank": 7.0,
+        "exact_top1": 0.5,
+        "class_top1": 0.5,
+        "class_top5": 0.6666666666666666
+      },
+      {
+        "term": "N.W.",
+        "class": "reporter",
+        "n": 6,
+        "median_rank": 1.5,
+        "exact_top1": 0.5,
+        "class_top1": 0.6666666666666666,
+        "class_top5": 0.6666666666666666
+      },
+      {
+        "term": "A.2d",
+        "class": "reporter",
+        "n": 2,
+        "median_rank": 1.5,
+        "exact_top1": 0.5,
+        "class_top1": 0.5,
+        "class_top5": 1.0
+      },
+      {
+        "term": "e.g.",
+        "class": "signal",
+        "n": 6,
+        "median_rank": 4.0,
+        "exact_top1": 0.3333333333333333,
+        "class_top1": 0.3333333333333333,
+        "class_top5": 0.6666666666666666
+      },
+      {
+        "term": "et seq.",
+        "class": "signal",
+        "n": 6,
+        "median_rank": 2.0,
+        "exact_top1": 0.3333333333333333,
+        "class_top1": 0.3333333333333333,
+        "class_top5": 0.8333333333333334
+      },
+      {
+        "term": "G.L.",
+        "class": "statute",
+        "n": 6,
+        "median_rank": 1127.5,
+        "exact_top1": 0.3333333333333333,
+        "class_top1": 0.3333333333333333,
+        "class_top5": 0.3333333333333333
+      },
+      {
+        "term": "Q3",
+        "class": "quarter_marker",
+        "n": 6,
+        "median_rank": 7.5,
+        "exact_top1": 0.3333333333333333,
+        "class_top1": 0.3333333333333333,
+        "class_top5": 0.6666666666666666
+      },
+      {
+        "term": "Q2",
+        "class": "quarter_marker",
+        "n": 6,
+        "median_rank": 2.5,
+        "exact_top1": 0.3333333333333333,
+        "class_top1": 1.0,
+        "class_top5": 1.0
+      },
+      {
+        "term": "P/E",
+        "class": "fin_shorthand",
+        "n": 6,
+        "median_rank": 96.5,
+        "exact_top1": 0.3333333333333333,
+        "class_top1": 0.3333333333333333,
+        "class_top5": 0.5
+      },
+      {
+        "term": "P.L.",
+        "class": "statute",
+        "n": 6,
+        "median_rank": 3.0,
+        "exact_top1": 0.3333333333333333,
+        "class_top1": 0.3333333333333333,
+        "class_top5": 0.8333333333333334
+      },
+      {
+        "term": "N.E.",
+        "class": "reporter",
+        "n": 6,
+        "median_rank": 18.5,
+        "exact_top1": 0.3333333333333333,
+        "class_top1": 0.3333333333333333,
+        "class_top5": 0.5
+      },
+      {
+        "term": "S.W.",
+        "class": "reporter",
+        "n": 6,
+        "median_rank": 4661.0,
+        "exact_top1": 0.3333333333333333,
+        "class_top1": 0.3333333333333333,
+        "class_top5": 0.5
+      },
+      {
+        "term": "DEF 14A",
+        "class": "sec_form",
+        "n": 6,
+        "median_rank": 11.0,
+        "exact_top1": 0.3333333333333333,
+        "class_top1": 0.6666666666666666,
+        "class_top5": 0.6666666666666666
+      },
+      {
+        "term": "6-K",
+        "class": "sec_form",
+        "n": 6,
+        "median_rank": 12.5,
+        "exact_top1": 0.3333333333333333,
+        "class_top1": 0.6666666666666666,
+        "class_top5": 0.6666666666666666
+      },
+      {
+        "term": "Q1",
+        "class": "quarter_marker",
+        "n": 6,
+        "median_rank": 74.5,
+        "exact_top1": 0.16666666666666666,
+        "class_top1": 0.5,
+        "class_top5": 0.6666666666666666
+      },
+      {
+        "term": "C.F.R.",
+        "class": "statute",
+        "n": 6,
+        "median_rank": 2.0,
+        "exact_top1": 0.16666666666666666,
+        "class_top1": 0.16666666666666666,
+        "class_top5": 1.0
+      },
+      {
+        "term": "cf.",
+        "class": "signal",
+        "n": 6,
+        "median_rank": 2.5,
+        "exact_top1": 0.0,
+        "class_top1": 0.0,
+        "class_top5": 1.0
+      },
+      {
+        "term": "v.",
+        "class": "signal",
+        "n": 6,
+        "median_rank": 79.0,
+        "exact_top1": 0.0,
+        "class_top1": 0.0,
+        "class_top5": 0.3333333333333333
+      },
+      {
+        "term": "G.S.",
+        "class": "statute",
+        "n": 6,
+        "median_rank": 603.5,
+        "exact_top1": 0.0,
+        "class_top1": 0.16666666666666666,
+        "class_top5": 0.16666666666666666
+      },
+      {
+        "term": "C.S.",
+        "class": "statute",
+        "n": 6,
+        "median_rank": 367.5,
+        "exact_top1": 0.0,
+        "class_top1": 0.0,
+        "class_top5": 0.5
+      },
+      {
+        "term": "Q4",
+        "class": "quarter_marker",
+        "n": 6,
+        "median_rank": 2576.0,
+        "exact_top1": 0.0,
+        "class_top1": 0.16666666666666666,
+        "class_top5": 0.16666666666666666
+      },
+      {
+        "term": "H.B.",
+        "class": "statute",
+        "n": 6,
+        "median_rank": 964.0,
+        "exact_top1": 0.0,
+        "class_top1": 0.0,
+        "class_top5": 0.0
+      },
+      {
+        "term": "Amend.",
+        "class": "subdivision",
+        "n": 6,
+        "median_rank": 61.5,
+        "exact_top1": 0.0,
+        "class_top1": 0.0,
+        "class_top5": 0.0
+      },
+      {
+        "term": "K.S.A.",
+        "class": "statute",
+        "n": 2,
+        "median_rank": 16.5,
+        "exact_top1": 0.0,
+        "class_top1": 0.0,
+        "class_top5": 0.0
+      },
+      {
+        "term": "S. Ct.",
+        "class": "reporter",
+        "n": 5,
+        "median_rank": 2723.0,
+        "exact_top1": 0.0,
+        "class_top1": 0.2,
+        "class_top5": 0.2
+      },
+      {
+        "term": "W.S.",
+        "class": "statute",
+        "n": 6,
+        "median_rank": 4141.5,
+        "exact_top1": 0.0,
+        "class_top1": 0.0,
+        "class_top5": 0.0
+      },
+      {
+        "term": "Secs.",
+        "class": "subdivision",
+        "n": 3,
+        "median_rank": 12.0,
+        "exact_top1": 0.0,
+        "class_top1": 0.0,
+        "class_top5": 0.0
+      },
+      {
+        "term": "YoY",
+        "class": "fin_shorthand",
+        "n": 2,
+        "median_rank": 30134.5,
+        "exact_top1": 0.0,
+        "class_top1": 0.0,
+        "class_top5": 0.0
+      }
+    ]
+  }
+}
